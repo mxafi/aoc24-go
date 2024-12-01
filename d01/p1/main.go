@@ -85,7 +85,6 @@ func main() {
 	for scanner.Scan() {
 		var line = scanner.Text()
 		var leftIn, rightIn int = getNumbers(line)
-		fmt.Printf("%v:%v\n", leftIn, rightIn)
 		left = append(left, leftIn)
 		right = append(right, rightIn)
 	}
@@ -93,20 +92,13 @@ func main() {
 		fmt.Println("error reading input file:", err)
 	}
 
-	fmt.Println("Left  Unsorted List: ", left)
-	fmt.Println("Right Unsorted List: ", right)
 	slices.Sort(left)
 	slices.Sort(right)
-	fmt.Println("Left  Sorted   List: ", left)
-	fmt.Println("Right Sorted   List: ", right)
-
 	var merged []int = mergeLists(left, right)
-	fmt.Println("        Merged List: ", merged)
-
 	var mergedSum int = 0
 	for _, val := range merged {
 		mergedSum += val
 	}
 
-	fmt.Println("    Merged List Sum: ", mergedSum)
+	fmt.Println("Merged List Sum: ", mergedSum)
 }
