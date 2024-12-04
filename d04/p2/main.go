@@ -60,22 +60,6 @@ func solveGrid(grid [][]rune) int {
 	var xmasCount int = 0
 	var rowLen = len(grid[0])
 	var gridLen = len(grid)
-	var isVerticalSearchEnabled bool = true
-	var isHorizontalSearchEnabled bool = true
-	var isDiagonalSearchEnabled bool = true
-
-	// disable search types based on grid shape
-	// XMAS fits horizontally and diagonally in 4 spaces
-	if rowLen < 4 {
-		isHorizontalSearchEnabled = false
-		isDiagonalSearchEnabled = false
-	}
-	// XMAS fits vertically and diagonally in 4 spaces
-	if gridLen < 4 {
-		isVerticalSearchEnabled = false
-		isDiagonalSearchEnabled = false
-	}
-	// now only the possible search types are enabled
 
 	// simplest search for XMAS or SAMX is character by character, top down
 	// where patterns are checked starting with X or S
@@ -83,15 +67,9 @@ func solveGrid(grid [][]rune) int {
 	// vertical checks are done only down, and horizontal only left
 	for j, row := range grid {
 		for i, c := range row {
-			if c == 'X' || c == 'S' {
-				if isVerticalSearchEnabled {
-					xmasCount += searchVertical(grid, c, i, j, rowLen, gridLen)
-				}
-				if isHorizontalSearchEnabled {
-					xmasCount += searchHorizontal(grid, c, i, j, rowLen, gridLen)
-				}
-				if isDiagonalSearchEnabled {
-					xmasCount += searchDiagonal(grid, c, i, j, gridLen)
+			if c == 'A' {
+				if isCross(grid, c, i, j, rowLen, gridLen) {
+					xmasCount += 1
 				}
 			}
 		}
@@ -100,77 +78,25 @@ func solveGrid(grid [][]rune) int {
 	return xmasCount
 }
 
-// searches only top down
-// returns count of XMAS or SAMX instances
-func searchVertical(grid [][]rune, c rune, i int, j int, rowLen int, gridLen int) int {
-	var count int = 0
-	if j+4 > gridLen {
-		return 0 // cannot fit 4 letter word in grid
+func isCross(grid [][]rune, c rune, i int, j int, rowLen int, gridLen int) bool {
+	// check if cross fits in grid
+	if i < 1 || i+2 > rowLen || j < 1 || j+2 > gridLen {
+		return false // does not fit, we are at the edge of the grid
 	}
 
-	var targetRunes = []rune{grid[j][i], grid[j+1][i], grid[j+2][i], grid[j+3][i]}
-	var targetString string = string(targetRunes)
-
-	if targetString == "XMAS" || targetString == "SAMX" {
-		count += 1
-		fmt.Printf("found vert at (j,i) (%v,%v): %v\n", j, i, targetString)
-	}
-
-	return count
-}
-
-// searches only left to right
-// returns count of XMAS or SAMX instances
-func searchHorizontal(grid [][]rune, c rune, i int, j int, rowLen int, gridLen int) int {
-	var count int = 0
-	if i+4 > gridLen {
-		return 0 // cannot fit 4 letter word in grid
-	}
-
-	var targetRunes = []rune{grid[j][i], grid[j][i+1], grid[j][i+2], grid[j][i+3]}
-	var targetString string = string(targetRunes)
-
-	if targetString == "XMAS" || targetString == "SAMX" {
-		count += 1
-		fmt.Printf("found hori at (j,i) (%v,%v): %v\n", j, i, targetString)
-	}
-
-	return count
-}
-
-// searches only left to right (from position to up-right and down-right)
-// returns count of XMAS or SAMX instances
-func searchDiagonal(grid [][]rune, c rune, i int, j int, gridLen int) int {
-	var count int = 0
-	if i+4 > gridLen {
-		return 0 // cannot fit 4 letter word in grid to right
-	}
-
-	// look for up-right first
-
-	if j >= 3 {
-		// fits a 4 letter word up
-		var targetRunes = []rune{grid[j][i], grid[j-1][i+1], grid[j-2][i+2], grid[j-3][i+3]}
-		var targetString string = string(targetRunes)
+	// get the diagonal string and match either one, A in the middle confirmed already
+	var topDownRunes = []rune{grid[j-1][i-1], grid[j][i], grid[j+1][i+1]}
+	var bottomUpRunes = []rune{grid[j+1][i-1], grid[j][i], grid[j-1][i+1]}
+	var topDown string = string(topDownRunes)
+	var bottomUp string = string(bottomUpRunes)
 	
-		if targetString == "XMAS" || targetString == "SAMX" {
-			count += 1
-			fmt.Printf("found diag at (j,i) (%v,%v): %v (  up-right)\n", j, i, targetString)
-		}
+	if topDown != "MAS" && topDown != "SAM" {
+		return false // TD does not match
 	}
 
-	// look for down-right next
-
-	if j+4 <= gridLen {
-		// fits a 4 letter word down
-		var targetRunes = []rune{grid[j][i], grid[j+1][i+1], grid[j+2][i+2], grid[j+3][i+3]}
-		var targetString = string(targetRunes)
-	
-		if targetString == "XMAS" || targetString == "SAMX" {
-			count += 1
-			fmt.Printf("found diag at (j,i) (%v,%v): %v (down-right)\n", j, i, targetString)
-		}
+	if bottomUp != "MAS" && bottomUp != "SAM" {
+		return false // BU does not match
 	}
 
-	return count
+	return true
 }
