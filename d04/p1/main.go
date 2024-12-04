@@ -45,8 +45,9 @@ func main() {
 	fmt.Println("Got GRID")
 	fmt.Println("len:", rowLen)
 	for i, row := range grid {
-		fmt.Printf("%v|%v\n", row, i+1)
+		fmt.Printf("%v|%v\n", string(row), i)
 	}
+	fmt.Println("0123456789")
 
 	fmt.Println("Solving GRID...")
 	xmasCount = solveGrid(grid)
@@ -80,16 +81,18 @@ func solveGrid(grid [][]rune) int {
 	// where patterns are checked starting with X or S
 	// diagonal checks are only done up-right and down-right
 	// vertical checks are done only down, and horizontal only left
-	for i, row := range grid {
-		for j := range row {
-			if isVerticalSearchEnabled {
-				xmasCount += searchVertical(grid, i, j)
-			}
-			if isHorizontalSearchEnabled {
-				xmasCount += searchHorizontal(grid, i, j)
-			}
-			if isDiagonalSearchEnabled {
-				xmasCount += searchDiagonal(grid, i, j)
+	for j, row := range grid {
+		for i, c := range row {
+			if c == 'X' || c == 'S' {
+				if isVerticalSearchEnabled {
+					xmasCount += searchVertical(grid, c, i, j, rowLen, gridLen)
+				}
+				if isHorizontalSearchEnabled {
+					xmasCount += searchHorizontal(grid, c, i, j, rowLen, gridLen)
+				}
+				if isDiagonalSearchEnabled {
+					xmasCount += searchDiagonal(grid, c, i, j, gridLen)
+				}
 			}
 		}
 	}
@@ -99,21 +102,75 @@ func solveGrid(grid [][]rune) int {
 
 // searches only top down
 // returns count of XMAS or SAMX instances
-func searchVertical(grid [][]rune, i int, j int) int {
+func searchVertical(grid [][]rune, c rune, i int, j int, rowLen int, gridLen int) int {
 	var count int = 0
+	if j+4 > gridLen {
+		return 0 // cannot fit 4 letter word in grid
+	}
+
+	var targetRunes = []rune{grid[j][i], grid[j+1][i], grid[j+2][i], grid[j+3][i]}
+	var targetString string = string(targetRunes)
+
+	if targetString == "XMAS" || targetString == "SAMX" {
+		count += 1
+		fmt.Printf("found vert at (j,i) (%v,%v): %v\n", j, i, targetString)
+	}
+
 	return count
 }
 
 // searches only left to right
 // returns count of XMAS or SAMX instances
-func searchHorizontal(grid [][]rune, i int, j int) int {
+func searchHorizontal(grid [][]rune, c rune, i int, j int, rowLen int, gridLen int) int {
 	var count int = 0
+	if i+4 > gridLen {
+		return 0 // cannot fit 4 letter word in grid
+	}
+
+	var targetRunes = []rune{grid[j][i], grid[j][i+1], grid[j][i+2], grid[j][i+3]}
+	var targetString string = string(targetRunes)
+
+	if targetString == "XMAS" || targetString == "SAMX" {
+		count += 1
+		fmt.Printf("found hori at (j,i) (%v,%v): %v\n", j, i, targetString)
+	}
+
 	return count
 }
 
 // searches only left to right (from position to up-right and down-right)
 // returns count of XMAS or SAMX instances
-func searchDiagonal(grid [][]rune, i int, j int) int {
+func searchDiagonal(grid [][]rune, c rune, i int, j int, gridLen int) int {
 	var count int = 0
+	if i+4 > gridLen {
+		return 0 // cannot fit 4 letter word in grid to right
+	}
+
+	// look for up-right first
+
+	if j >= 3 {
+		// fits a 4 letter word up
+		var targetRunes = []rune{grid[j][i], grid[j-1][i+1], grid[j-2][i+2], grid[j-3][i+3]}
+		var targetString string = string(targetRunes)
+	
+		if targetString == "XMAS" || targetString == "SAMX" {
+			count += 1
+			fmt.Printf("found diag at (j,i) (%v,%v): %v (  up-right)\n", j, i, targetString)
+		}
+	}
+
+	// look for down-right next
+
+	if j+4 <= gridLen {
+		// fits a 4 letter word down
+		var targetRunes = []rune{grid[j][i], grid[j+1][i+1], grid[j+2][i+2], grid[j+3][i+3]}
+		var targetString = string(targetRunes)
+	
+		if targetString == "XMAS" || targetString == "SAMX" {
+			count += 1
+			fmt.Printf("found diag at (j,i) (%v,%v): %v (down-right)\n", j, i, targetString)
+		}
+	}
+
 	return count
 }
