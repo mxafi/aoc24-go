@@ -61,18 +61,12 @@ func main() {
 	var rules []rule = parseRules(rulesInput)
 	var updates []update = parseUpdates(updatesInput)
 
-	// graph pages to point to slice of pages that come after it
-	var ruleGraph = make(map[int][]int)
-	for _, rule := range rules {
-		ruleGraph[rule.pageA] = append(ruleGraph[rule.pageA], rule.pageB)
-	}
-
 	for _, currentUpdate := range updates {
 		if isUpdateValid(currentUpdate, rules) {
 			// fmt.Printf(" valid  update: %v\n", currentUpdate)
 		} else {
 			fmt.Printf("invalid update: %v\n", currentUpdate)
-			var fixed update = fixUpdate(currentUpdate, ruleGraph)
+			var fixed update = fixUpdate(currentUpdate, rules)
 			var midSum int64 = int64(fixed.pages[(len(fixed.pages)-1)/2])
 			fmt.Printf("  fixed update: %v (mid:%v)\n", fixed, midSum)
 			sum += midSum
@@ -172,46 +166,45 @@ func isUpdateValid(update update, rules []rule) bool {
 	return true
 }
 
-func fixUpdate(input update, ruleGraph map[int][]int) update {
-	// DFS of all edges
-	visitedEdges := make(map[int]map[int]bool)
-	result := []int{}
-	var visit func(int)
-	visit = func(page int) {
-		if visitedEdges[page] == nil {
-			visitedEdges[page] = make(map[int]bool)
-		}
-		for _, nextPage := range ruleGraph[page] {
-			if !visitedEdges[page][nextPage] {
-				visitedEdges[page][nextPage] = true
-				visit(nextPage)
+func fixUpdate(input update, rules []rule) update {
+	pages := append([]int{}, input.pages...)
+	// apply rules in a loop until no more changes are necessary
+	for {
+		changed := false
+		// apply rules to the current page order
+		for _, r := range rules {
+			// Find the first occurrences of r.pageA and r.pageB in the update
+			posA, posB := -1, -1
+			for i, page := range pages {
+				if page == r.pageA && posA == -1 {
+					posA = i
+				} else if page == r.pageB && posB == -1 {
+					posB = i
+				}
+			}
+			// both pages are found and A is after B, move A just to the left of B
+			if posA != -1 && posB != -1 && posA > posB {
+				pages = movePageBefore(pages, posA, posB)
+				changed = true
 			}
 		}
-		result = append(result, page)
-	}
-	for _, page := range input.pages {
-		visit(page)
-	}
-
-	// DFS returns results in reverse order, unreverse
-	reversed := make([]int, len(result))
-	for i, page := range result {
-		reversed[len(result)-1-i] = page
-	}
-
-	// get the correct count per page to prevent removing duplicates
-	pageCount := make(map[int]int)
-	for _, page := range input.pages {
-		pageCount[page]++
-	}
-
-	var fixedPages []int
-	for _, page := range reversed {
-		if pageCount[page] > 0 {
-			fixedPages = append(fixedPages, page)
-			pageCount[page]--
+		// no changes means all rules are now satisfied
+		// does not take circular logic into account
+		if !changed {
+			break
 		}
 	}
+	return update{pages: pages}
+}
 
-	return update{pages: fixedPages}
+func movePageBefore(pages []int, from int, to int) []int {
+	if from < to {
+		return pages // already in correct order
+	}
+	// extract the "from" page from pages
+	page := pages[from]
+	pages = append(pages[:from], pages[from+1:]...)
+	// insert the "from" page just before "to"
+	pages = append(pages[:to], append([]int{page}, pages[to:]...)...)
+	return pages
 }
