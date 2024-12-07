@@ -39,7 +39,25 @@ func main() {
 	}
 
 	start := time.Now()
-	sum = testEquations(inputEquations)
+	const numGoroutines = 16
+	results := make(chan int)
+	equationsPerGroup := (len(inputEquations) + numGoroutines - 1) / numGoroutines
+	fmt.Printf("Executing %v goroutines, with %v equations per routine\n", numGoroutines, equationsPerGroup)
+	for i := 0; i < numGoroutines; i++ {
+		start := i * equationsPerGroup
+		end := start + equationsPerGroup
+		if end > len(inputEquations) {
+			end = len(inputEquations)
+		}
+		group := inputEquations[start:end]
+
+		go func(g []equation) {
+			results <- testEquations(g)
+		}(group)
+	}
+	for i := 0; i < numGoroutines; i++ {
+		sum += <-results
+	}
 	elapsed := time.Since(start)
 
 	fmt.Printf("Sum: %v\n", sum)
