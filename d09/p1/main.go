@@ -18,10 +18,12 @@ func main() {
 	}
 	defer file.Close()
 
+	var line string
+
 	var scanner = bufio.NewScanner(file)
 	var scanRow int = 1
 	for scanner.Scan() {
-		var line = scanner.Text()
+		line = scanner.Text()
 		if scanRow > 1 {
 			fmt.Println("more than 1 row exists, invalid input")
 			os.Exit(1)
@@ -31,19 +33,85 @@ func main() {
 	if err := scanner.Err(); err != nil {
 		fmt.Println("error reading input file:", err)
 	}
-
 	start := time.Now()
-	var filesystemChecksum int = 0
 
-	// count file and empty blocks
-	// reserve space in rune slice
+	// count file and empty block size
 	// spread file and empty blocks with their ids
-	// count empty blocks and record their indexes
-	// go through the memory back to front, filling up the empty indexes front to back
-	// calculate the checksum
+	var memory []int // -1 is empty, 0, 1, ... is file ID
+	var currentFileId int = 0
+	for i, r := range line {
+		// line starts with file, then empty space, etc.
+		if r < '0' && r > '9' {
+			fmt.Println("invalid characters detected")
+			os.Exit(1)
+		}
+		isFile := false
+		if i%2 == 0 {
+			isFile = true
+		}
+		blockCount := int(r - '0')
+		for j := 0; j < blockCount; j++ {
+			if isFile {
+				memory = append(memory, currentFileId)
+			} else {
+				memory = append(memory, -1)
+			}
+		}
+		if isFile {
+			currentFileId++
+		}
+	}
+	printMemory(memory, "input memory")
+
+	// go through the memory back to front, swapping file blocks with empty blocks from the start
+	var leftIdx int = 0
+	for i := len(memory) - 1; ; i-- {
+		if memory[i] < 0 {
+			continue // skip empty
+		}
+		for ; ; leftIdx++ {
+			if memory[leftIdx] >= 0 {
+				continue // skip non-empty
+			}
+			break // now we have a free slot
+		}
+		if leftIdx >= i {
+			break // we're done
+		}
+		// let's swap
+		memory[leftIdx] = memory[i]
+		memory[i] = -1
+		printMemory(memory, "sorting...")
+	}
+
+	// calculate the checksum (total from multiplying each index with the value)
+	var filesystemChecksum int = 0
+	for i, val := range memory {
+		if val >= 0 {
+			filesystemChecksum += i * val
+		}
+	}
 
 	elapsed := time.Since(start)
 	fmt.Println("Solved in:", elapsed)
-
 	fmt.Println("Filesystem Checksum:", filesystemChecksum)
+}
+
+func printMemory(mem []int, msg string) {
+	if true {
+		return // toggle printMemory on if debugging
+	}
+	if len(msg) > 20 {
+		fmt.Println("error: printMemory: msg too long (>20)")
+		os.Exit(1)
+	}
+	fmt.Printf("%-20s:", msg)
+	for _, val := range mem {
+		if val == -1 {
+			fmt.Print(" .")
+		} else {
+			fmt.Printf(" %d", val)
+		}
+	}
+	fmt.Println()
 }
