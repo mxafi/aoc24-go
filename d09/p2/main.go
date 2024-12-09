@@ -64,23 +64,56 @@ func main() {
 	printMemory(memory, "input memory")
 
 	// go through the memory back to front, swapping file blocks with empty blocks from the start
-	var leftIdx int = 0
 	for i := len(memory) - 1; ; i-- {
 		if memory[i] < 0 {
 			continue // skip empty
 		}
-		for ; ; leftIdx++ {
-			if memory[leftIdx] >= 0 {
-				continue // skip non-empty
+
+		// find out the length of the file
+		var fileBlockSize int
+		fileId := memory[i]
+		for j := i - 1; j >= 0; j-- {
+			if memory[j] != fileId {
+				fileBlockSize = i - j
+				i = j + 1
+				break
 			}
-			break // now we have a free slot
 		}
-		if leftIdx >= i {
+
+		// find empty space that fits the file
+		var emptyBlockStartIndex int
+		var emptyBlockSize int
+		for j := 0; j < i; j++ {
+			if memory[j] >= 0 {
+				continue // skip files
+			}
+			emptyBlockSize = 0
+			for k := j; k < i && memory[k] == -1; k++ {
+				emptyBlockSize++
+			}
+			if emptyBlockSize >= fileBlockSize {
+				emptyBlockStartIndex = j
+				break
+			} else {
+				emptyBlockSize = 0
+			}
+		}
+
+		// check sort finish condition
+		if emptyBlockStartIndex >= i {
 			break // we're done
 		}
-		// let's swap
-		memory[leftIdx] = memory[i]
-		memory[i] = -1
+
+		// check current file guard
+		if emptyBlockSize == 0 {
+			continue // this file cannot fit in any space to its left, skip to next
+		}
+
+		// move the file
+		for j := 0; j < fileBlockSize; j++ {
+			memory[emptyBlockStartIndex+j] = memory[i+j]
+			memory[i+j] = -1
+		}
 		printMemory(memory, "sorting...")
 	}
 
