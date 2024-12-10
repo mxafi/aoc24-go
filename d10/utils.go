@@ -36,8 +36,26 @@ func debugPrintf(format string, v ...interface{}) {
 	}
 }
 
+func debugPrintln(v ...interface{}) {
+	if globalDebugEnabled {
+		fmt.Println(v...)
+	}
+}
+
 func printIntGrid(grid [][]int) {
+	var rowLen int = len(grid[0])
 	for i, row := range grid {
 		debugPrintf("%v|%v\n", row, i)
 	}
+	var dashes string
+	for i := 0; i < rowLen; i++ {
+		dashes += "--"
+	}
+	dashes += "-"
+	debugPrintln(dashes)
+	var indexes string
+	for i := 0; i < rowLen; i++ {
+		indexes += fmt.Sprintf(" %d", i)
+	}
+	debugPrintln(indexes)
 }

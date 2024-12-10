@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-const globalDebugEnabled = true
+const globalDebugEnabled = false
 
 func main() {
 	if len(os.Args) < 3 || len(os.Args) > 3 {
