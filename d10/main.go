@@ -23,7 +23,7 @@ func main() {
 	if part == "1" {
 		fmt.Println("Part 1: Sum of all trailhead scores:", solveP1(grid))
 	} else if part == "2" {
-		fmt.Println("Part 2: NOT IMPLEMENTED YET")
+		fmt.Println("Part 1: Sum of all trailhead ratings:", solveP2(grid))
 	} else {
 		fmt.Println("usage: ./aoc FILE PART (PART is 1 or 2)")
 		os.Exit(1)
