@@ -35,6 +35,9 @@ func readIntSlice(filePath string) ([]int, error) {
 }
 
 func printIntSlice(slice []int) {
+	if !globalDebugEnabled {
+		return
+	}
 	for _, num := range slice {
 		debugPrintf("%d ", num)
 	}
@@ -78,6 +81,9 @@ func debugPrintln(v ...interface{}) {
 }
 
 func printIntGrid(grid [][]int) {
+	if !globalDebugEnabled {
+		return
+	}
 	var rowLen int = len(grid[0])
 	for i, row := range grid {
 		debugPrintf("%v|%v\n", row, i)
@@ -93,4 +99,24 @@ func printIntGrid(grid [][]int) {
 		indexes += fmt.Sprintf(" %d", i)
 	}
 	debugPrintln(indexes)
+}
+
+func printIntToIntMap(m map[int]int) {
+	if !globalDebugEnabled {
+		return
+	}
+	var keys []int
+	var values []int
+	for k, v := range m {
+		keys = append(keys, k)
+		values = append(values, v)
+	}
+	for _, key := range keys {
+		debugPrintf("%d ", key)
+	}
+	debugPrintln()
+	for i, value := range values {
+		debugPrintf("%-*d ", len(fmt.Sprintf("%d", keys[i])), value)
+	}
+	debugPrintln()
 }

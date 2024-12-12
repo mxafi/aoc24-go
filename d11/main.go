@@ -30,7 +30,7 @@ func main() {
 	if part == "1" {
 		fmt.Println("Part 1: Stone count after 25 blinks:", solveP1(slice))
 	} else if part == "2" {
-		// todo
+		fmt.Println("Part 2: Stone count after 75 blinks:", solveP2(slice))
 	} else {
 		fmt.Println("usage: ./aoc FILE PART (PART is 1 or 2)")
 		os.Exit(1)
