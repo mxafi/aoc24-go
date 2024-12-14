@@ -29,7 +29,7 @@ func main() {
 	if part == "1" {
 		fmt.Println("Part 1: Safety factor after 100 seconds:", solveP1(slice))
 	} else if part == "2" {
-		// todo
+		solveP2(slice)
 	} else {
 		fmt.Println("usage: ./aoc FILE PART (PART is 1 or 2)")
 		os.Exit(1)
